@@ -1,0 +1,6 @@
+/* E-commerce/frontend/src/index.css */
+
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes: light --default;
+}
