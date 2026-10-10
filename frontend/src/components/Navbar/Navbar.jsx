@@ -16,7 +16,9 @@ const Navbar = () => {
           </Link>
         </div>
         <div className="navbar-end gap-3">
-          <Link className="btn btn-primary">Dashboard</Link>
+          <Link to="/" className="btn btn-primary">
+            Dashboard
+          </Link>
           <Cart />
           <UserDropDown />
         </div>

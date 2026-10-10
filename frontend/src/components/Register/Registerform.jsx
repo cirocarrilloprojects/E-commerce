@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { registerService } from '../../services/authServices.js'
 
 const Registerform = () => {
   const {
@@ -19,9 +20,7 @@ const Registerform = () => {
   const [showPassword, setShowPassword] = useState(false)
 
   const onSubmit = (data) => {
-    console.log(data) // reinicia el formulario despues del registro de usuario
-    reset() // reinicia el formulario despues del registro de usuario
-    // registro de usuario
+    registerService(data, reset)
   }
   return (
     <form
@@ -73,9 +72,9 @@ const Registerform = () => {
               message: 'El correo electrónico debe tener al menos 6 caracteres',
             },
             maxLength: {
-              value: 75,
+              value: 254,
               message:
-                'El correo electrónico no puede tener más de 75 caracteres',
+                'El correo electrónico no puede tener más de 254 caracteres',
             },
           })}
         />
@@ -100,8 +99,8 @@ const Registerform = () => {
               message: 'La contraseña debe tener al menos 6 caracteres',
             },
             maxLength: {
-              value: 250,
-              message: 'La contraseña no puede tener más de 250 caracteres',
+              value: 254,
+              message: 'La contraseña no puede tener más de 254 caracteres',
             },
           })}
         />
