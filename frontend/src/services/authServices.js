@@ -57,7 +57,7 @@ export const registerService = async (
       headers: { 'Content-Type': 'application/json' },
       withCredentials: true,
     })
-    console.log('📥 Respuesta de /register:', response.data)
+    console.log(' Respuesta de /register:', response.data)
     if (reset) reset()
     if (setRedirect) setRedirect(true)
     if (checkSession) await checkSession() // ← al final, ya con cookie seteada
@@ -66,7 +66,7 @@ export const registerService = async (
       message: true,
     }
   } catch (error) {
-    console.error('❌ Error en registerService:', error)
+    console.error(' Error en registerService:', error)
     const msg =
       error.response?.data?.error ||
       error.response?.data?.message ||

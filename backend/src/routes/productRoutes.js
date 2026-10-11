@@ -1,26 +1,57 @@
 // E-commerce/backend/src/routes/productRoutes.js
-import express from 'express'
+
+/**
+ * ARCHIVO     : src/routes/productRoutes.js
+ * CAPA        : Rutas
+ * ROL         : Endpoints del catálogo. Lectura pública; escritura SOLO para administradores
+ *               (antes el comentario decía "solo administradores" pero no había ninguna protección).
+ * LO CONSUME  : routes/index.js (se monta en /api/products).
+ * CONSUME     : authenticate + requireAdmin, validate, schema/productSchema.js, schema/common.js, productController.
+ *
+ * Cadena de escritura:  authenticate (¿quién eres?) → requireAdmin (¿puedes?) → validate (¿datos válidos?) → controlador
+ */
+import { Router } from 'express'
+import * as controller from '../controllers/productController.js'
+import { authenticate, requireAdmin } from '../middleware/authenticate.js'
+import { validate } from '../middleware/validate.js'
 import {
-    createProduct,
-    deleteProduct,
-    getAllProducts,
-    getProductById,
-    updateProduct,
-} from '../controllers/productsControllers.js'
-const router = express.Router()
+    productSchema,
+    productUpdateSchema,
+    productListQuerySchema,
+} from '../schema/productSchema.js'
+import { idParamSchema } from '../schema/common.js'
 
-//rutas publias
+const router = Router()
 
-router.get('/', getAllProducts)
+// Públicas
+router.get(
+    '/',
+    validate({ query: productListQuerySchema }),
+    controller.listProducts
+)
+router.get('/:id', validate({ params: idParamSchema }), controller.getProduct)
 
-router.get('/:id', getProductById)
-
-// solo administradores
-
-router.post('/', createProduct) // crear un producto
-
-router.put('/:id', updateProduct) // actualizar un producto
-
-router.delete('/:id', deleteProduct) // eliminar un producto
+// Solo administradores
+router.post(
+    '/',
+    authenticate,
+    requireAdmin,
+    validate({ body: productSchema }),
+    controller.createProduct
+)
+router.put(
+    '/:id',
+    authenticate,
+    requireAdmin,
+    validate({ params: idParamSchema, body: productUpdateSchema }),
+    controller.updateProduct
+)
+router.delete(
+    '/:id',
+    authenticate,
+    requireAdmin,
+    validate({ params: idParamSchema }),
+    controller.deleteProduct
+)
 
 export default router
