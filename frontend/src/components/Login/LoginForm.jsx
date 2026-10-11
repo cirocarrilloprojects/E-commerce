@@ -24,7 +24,6 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [redirect, setRedirect] = useState(false)
 
-  console.log(userInfo)
   const onSubmit = async (data) => {
     // login de usuario
     const result = await loginService(data, reset, setUserInfo, setRedirect)

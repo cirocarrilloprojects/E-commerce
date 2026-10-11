@@ -14,14 +14,8 @@ axios.defaults.withCredentials = true
 export const getProfileService = async () => {
   try {
     const response = await axios.get(`${API_URL}/profile`)
-    console.log('Respuesta de /profile:', response.data)
     return response.data
   } catch (error) {
-    console.warn(
-      'ℹ️ getProfileService:',
-      error.response?.status || error.message,
-      error.response?.data,
-    )
     throw error
   }
 }
