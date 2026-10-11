@@ -1,6 +1,19 @@
 // E-commerce/frontend/src/components/Navbar/UserDropDown.jsx
-
+import { useUser } from '../../context/UserContext.jsx'
+import toast from 'react-hot-toast'
+import { logoutService } from '../../services/authServices.js'
 const UserDropDown = () => {
+  const { setUserInfo } = useUser()
+  const handleLogout = async () => {
+    try {
+      await logoutService()
+      setUserInfo({})
+      toast.success('sesion cerrada correctamente')
+    } catch (error) {
+      console.error('Error al cerrar sesion', error)
+      toast.error('Error al iniciar sesion intente mas tarde')
+    }
+  }
   return (
     <div className="dropdown dropdown-end">
       <div
@@ -29,7 +42,9 @@ const UserDropDown = () => {
           <a className="justify-between">Configuracion</a>
         </li>
         <li>
-          <a className="justify-between">Cerrar sesion</a>
+          <a onClick={handleLogout} className="justify-between">
+            Cerrar sesion
+          </a>
         </li>
       </ul>
     </div>

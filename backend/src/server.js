@@ -7,7 +7,7 @@ import morgan from 'morgan'
 import mongoose from 'mongoose'
 import { connectDB, disconnectDB } from './config/configdb.js'
 import authRoutes from './routes/authRoutes.js'
-
+import productRoutes from './routes/productRoutes.js'
 // 1. Validar variables de entorno
 const REQUIRED_ENV = [
     'JWT_SECRET',
@@ -47,7 +47,7 @@ app.get('/health', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
-
+app.use('/api/products', productRoutes)
 // 5. 404
 app.use((req, res) => {
     res.status(404).json({ error: `Ruta no encontrada: ${req.originalUrl}` })

@@ -1,8 +1,12 @@
 // E-commerce/frontend/src/components/Login/LoginForm.jsx
 
 import { useState } from 'react'
+import { Navigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import { loginService } from '../../services/authServices'
+import { useUser } from '../../context/UserContext'
+import toast from 'react-hot-toast'
 
 const LoginForm = () => {
   const {
@@ -16,13 +20,30 @@ const LoginForm = () => {
 
   // ojito de estado de la contraseña
 
+  const { setUserInfo, userInfo } = useUser()
   const [showPassword, setShowPassword] = useState(false)
+  const [redirect, setRedirect] = useState(false)
 
-  const onSubmit = (data) => {
-    console.log(data) // logueando al usuario despues del login
-    reset() // reinicia el formulario despues del login
+  console.log(userInfo)
+  const onSubmit = async (data) => {
     // login de usuario
+    const result = await loginService(data, reset, setUserInfo, setRedirect)
+
+    if (result.success) {
+      toast.success(result.message)
+    } else {
+      toast.error(result.message)
+    }
   }
+
+  if (redirect && userInfo.isAdmin) {
+    //return <Navigate to={"/admin/dashboard"} />
+  }
+
+  if (redirect && !userInfo.isAdmin) {
+    return <Navigate to="/" />
+  }
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -62,7 +83,7 @@ const LoginForm = () => {
 
       <div className="relative">
         <input
-          autoComplete="new-password"
+          autoComplete="current-password"
           className={`p-2 outline-2 rounded border focus:outline-primary w-full ${errors.password ? 'border-red-500 outline-red-500 focus:outline-red-500' : ''}`}
           name="password"
           placeholder="Contraseña"

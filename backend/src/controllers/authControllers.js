@@ -2,7 +2,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import User from '../models/UserModel.js'
-import { registerSchema } from '../schema/authSchema.js'
+import { registerSchema, loginSchema } from '../schema/authSchema.js'
 
 export const registerUser = async (req, res) => {
     try {
@@ -75,13 +75,106 @@ export const registerUser = async (req, res) => {
     }
 }
 
-export const profile = async (req, res) => {
-    // extraer el accesstoken enviado por el cliente en la cookie
-    console.log('req.cookies', req.cookies)
-    const token = req.cookies.accessToken
-    console.log('token', token)
+export const loginUser = async (req, res) => {
+    try {
+        // obtener la clave secreta del entorno
+        const JWT_SECRET = process.env.JWT_SECRET
+        // extraer el email y contraseña del cuerpo de la peticion
+        // ademas validarlo
+        const { email, password } = loginSchema.parse(req.body)
 
-    return {
-        user: 'test user',
+        // res.json({ email: email, password: password })
+
+        // buscar el usuario por email
+        const user = await User.findOne({ email })
+
+        if (!user) {
+            return res.status(401).json({ message: 'Credenciales inválidas' })
+        }
+        //  Comparar contraseña
+        const isPasswordValid = await bcrypt.compare(password, user.password) // ← ESTA LÍNEA FALTA
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Credenciales inválidas' })
+        }
+
+        // Generar un token con JWT
+        const token = jwt.sign(
+            { id: user._id, isAdmin: user.isAdmin },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        )
+
+        const userData = {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            isAdmin: user.isAdmin,
+        }
+
+        res.cookie('accessToken', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 60 * 60 * 1000,
+        })
+            .status(200)
+            .json(userData)
+    } catch (error) {
+        console.error('❌ Error en loginUser:', error)
+        if (error.name === 'ZodError') {
+            return res.status(400).json({
+                message: 'Datos inválidos',
+                details: error.issues,
+            })
+        }
+
+        res.status(500).json({
+            message: 'Error al iniciar sesion',
+            ...(process.env.NODE_ENV === 'development' && {
+                error: error.message,
+            }),
+        })
     }
+}
+// --- perfile
+export const profile = async (req, res) => {
+    try {
+        const token = req.cookies.accessToken
+        if (!token) {
+            return res.status(401).json({ error: 'No autenticado' })
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const user = await User.findById(decoded.id).select('-password')
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' })
+        }
+
+        res.status(200).json({
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            isAdmin: user.isAdmin,
+        })
+    } catch (error) {
+        console.error('❌ Error en profile:', error.message)
+        if (
+            error.name === 'JsonWebTokenError' ||
+            error.name === 'TokenExpiredError'
+        ) {
+            return res.status(401).json({ error: 'Token inválido o expirado' })
+        }
+        res.status(500).json({ error: 'Error interno del servidor' })
+    }
+}
+
+export const logout = (req, res) => {
+    res.clearCookie('accessToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    })
+    res.status(200).json({ message: 'Sesión cerrada' })
 }

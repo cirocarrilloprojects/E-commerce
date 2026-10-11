@@ -28,3 +28,8 @@ export const registerSchema = z.object({
             message: 'El nombre de usuario no puede tener más de 20 caracteres',
         }),
 })
+
+export const loginSchema = z.object({
+    email: z.email().min(6).max(254),
+    password: z.string().min(6).max(254),
+})

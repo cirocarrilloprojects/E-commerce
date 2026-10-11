@@ -14,6 +14,7 @@ export const UserContextProvider = ({ children }) => {
     try {
       setLoading(true)
       const userData = await getProfileService()
+      console.log('👤 Usuario en sesión:', userData)
       setUserInfo(userData)
     } catch (error) {
       console.error('no hay sesion activa', error)
