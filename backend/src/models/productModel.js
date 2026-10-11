@@ -1,36 +1,31 @@
-// E-commerce/backend/src/models/productModels.js
+// E-commerce/backend/src/models/productModel.js
 import mongoose from 'mongoose'
 
 const ProductSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            require: true,
+            required: true,
             trim: true,
         },
         description: {
             type: String,
-            require: true,
+            required: true,
             trim: true,
         },
         price: {
             type: Number,
-            require: true,
+            required: true,
             min: 0,
         },
         stock: {
-            type: String,
-            require: true,
+            type: Number,
+            required: true,
             min: 0,
         },
         imageUrl: {
             type: String,
-            require: true,
-        },
-        name: {
-            type: String,
-            require: true,
-            trim: true,
+            required: true,
         },
     },
     { timestamps: true }

@@ -1,22 +1,26 @@
 // E-commerce/backend/src/routes/productRoutes.js
 import express from 'express'
-
+import {
+    createProduct,
+    deleteProduct,
+    getAllProducts,
+    getProductById,
+    updateProduct,
+} from '../controllers/productsControllers.js'
 const router = express.Router()
 
 //rutas publias
 
-router.get('/', (req, res) => {
-    res.json({ message: 'OBTENER TODOS LOS PRODUCTOS' })
-})
+router.get('/', getAllProducts)
 
-router.get('/:id', () => {})
+router.get('/:id', getProductById)
 
 // solo administradores
 
-router.post('/', () => {}) // crear un producto
+router.post('/', createProduct) // crear un producto
 
-router.put('/id', () => {}) // actualizar un producto
+router.put('/:id', updateProduct) // actualizar un producto
 
-router.delete('/id', () => {}) // eliminar un producto
+router.delete('/:id', deleteProduct) // eliminar un producto
 
 export default router
