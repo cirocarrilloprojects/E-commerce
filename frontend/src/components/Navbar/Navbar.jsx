@@ -1,33 +1,43 @@
 //E-commerce/frontend/src/components/Navbar/Navbar.jsx
-
+/**
+ * ARCHIVO : src/components/navbar/Navbar.jsx
+ * ROL     : barra superior: marca, acceso al dashboard (solo admin), carrito y menú de usuario o botones de acceso.
+ * LO USA  : layouts/Layout.jsx.   USA: UserContext, AuthButtons, CartButton, CartModal, UserDropDown.
+ * CAMBIO  : antes AuthButtons ("crear cuenta / iniciar sesión") se mostraba SIEMPRE, incluso con sesión iniciada.
+ */
 import { Link } from 'react-router'
-import Cart from './Cart.jsx'
-import Authbuttons from './AuthButtons.jsx'
+import { useUser } from '../../context/UserContext'
+import AuthButtons from './AuthButtons.jsx'
+import CartButton from './CartButtons.jsx'
+import CartModal from './CartModal.jsx'
 import UserDropDown from './UserDropDown.jsx'
-import { useUser } from '../../context/UserContext.jsx'
 
 const Navbar = () => {
-  const { loading, userInfo } = useUser()
+  const { user, loading, isAuthenticated } = useUser()
 
   return (
     <header>
-      <Authbuttons />
-      <nav className="navbar bg-base-100 text-base-content shadow-sm w-full">
+      {!loading && !isAuthenticated && <AuthButtons />}
+      <nav
+        className="navbar w-full bg-base-100 shadow-sm lg:rounded-box"
+        aria-label="Principal"
+      >
         <div className="navbar-start">
-          <Link to="/" className="btn btn-ghost text-xl">
+          <Link className="btn btn-ghost text-xl" to="/">
             E-commerce
           </Link>
         </div>
         <div className="navbar-end gap-3">
-          {userInfo?.isAdmin && (
-            <Link to="/" className="btn btn-primary">
+          {user?.isAdmin && (
+            <Link to="/admin/dashboard/products" className="btn btn-primary">
               Dashboard
             </Link>
           )}
-          <Cart />
-          {!loading && userInfo?.username && <UserDropDown />}
+          <CartButton />
+          {isAuthenticated && <UserDropDown />}
         </div>
       </nav>
+      <CartModal />
     </header>
   )
 }

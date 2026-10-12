@@ -1,88 +1,25 @@
 // E-commerce/frontend/src/services/authServices.js
-import axios from 'axios'
-import toast from 'react-hot-toast'
-// configuracion base de axios para autentificacion
-const API_URL = import.meta.env.VITE_BACKEND_URL + '/auth'
-// http://localhost:3000/api/auth/register
-// http://localhost:3000/api/auth/profile
+/**
+ * ARCHIVO : src/services/authServices.js
+ * CAPA    : servicios (solo red; NO tocan estado de React ni muestran toasts)
+ * ROL     : endpoints de autenticación del backend (/api/auth/*).
+ * LO USA  : context/UserContext.jsx (único consumidor).
+ * ANTES   : loginService recibía reset/setUserInfo/setRedirect (acoplaba la red con la interfaz) y devolvía
+ *           undefined si el status no era 200. Ahora cada función solo devuelve datos o lanza ApiError.
+ */
+import { http } from '../lib/http'
 
-// http://localhost:3000/api/auth/login
+/** GET /auth/profile → usuario actual (401 si no hay sesión). */
+export const getProfile = (signal) =>
+  http.get('/auth/profile', { signal }).then((r) => r.data)
 
-// para incluir la cookies en las peticiones
-axios.defaults.withCredentials = true
+/** POST /auth/login → { id, username, email, isAdmin } (la cookie de sesión la pone el servidor). */
+export const login = (credentials) =>
+  http.post('/auth/login', credentials).then((r) => r.data)
 
-export const getProfileService = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/profile`)
-    return response.data
-  } catch (error) {
-    throw error
-  }
-}
+/** POST /auth/register → { message, user }. */
+export const register = (data) =>
+  http.post('/auth/register', data).then((r) => r.data)
 
-export const loginService = async (data, reset, setUserInfo, setRedirect) => {
-  try {
-    const response = await axios.post(`${API_URL}/login`, data, {
-      headers: { 'Content-Type': 'application/json' },
-      withCredentials: true,
-    })
-
-    // si la respuesta es exitos
-    if (response.status === 200) {
-      setUserInfo(response.data)
-      reset()
-      setRedirect(true)
-      return {
-        success: true,
-        message: 'Inicio de sesion exitoso',
-      }
-    }
-  } catch (error) {
-    console.log('Error al loguearse')
-    return {
-      success: false,
-      message: 'Error al loguearse',
-    }
-  }
-}
-
-export const registerService = async (
-  data,
-  reset,
-  setRedirect,
-  checkSession,
-) => {
-  try {
-    const response = await axios.post(`${API_URL}/register`, data, {
-      headers: { 'Content-Type': 'application/json' },
-      withCredentials: true,
-    })
-    console.log(' Respuesta de /register:', response.data)
-    if (reset) reset()
-    if (setRedirect) setRedirect(true)
-    if (checkSession) await checkSession() // ← al final, ya con cookie seteada
-
-    return {
-      message: true,
-    }
-  } catch (error) {
-    console.error(' Error en registerService:', error)
-    const msg =
-      error.response?.data?.error ||
-      error.response?.data?.message ||
-      error.message ||
-      'Error al registrarse'
-    throw new Error(msg)
-  }
-}
-
-export const logoutService = async () => {
-  try {
-    const response = await axios.post(`${API_URL}/logout`)
-    return response.data
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || 'Error al cerrar la sesion',
-    )
-  }
-}
+/** POST /auth/logout → el servidor borra la cookie. */
+export const logout = () => http.post('/auth/logout').then((r) => r.data)

@@ -1,53 +1,59 @@
 // E-commerce/frontend/src/pages/DetailProduct.jsx
-import { useEffect } from 'react'
+/**
+ * ARCHIVO : src/pages/DetailProduct.jsx
+ * ROL     : detalle de un producto (/detailProduct/:id).
+ * USA     : hooks/useProduct, AddToCartButton, lib/format.
+ * CORREGIDO: el botón "Agregar al carrito" no hacía nada; al cambiar de producto se veía un instante el anterior
+ *            (ahora useFetch reinicia los datos y cancela la petición previa); el error se distingue de "no encontrado".
+ */
 import { useParams } from 'react-router'
-import { useProduct } from '../context/ProductContext.jsx'
+import { Spinner } from '../components/ui/Spinner'
+import AddToCartButton from '../components/products/AddToCartButton'
+import { useProduct } from '../hooks/useProducts'
+import { formatPrice } from '../lib/format'
 
 const DetailProduct = () => {
-  const { id } = useParams() // ✅ con ()
-  const { getProductById, product, productLoading, productError } = useProduct()
+  const { id } = useParams()
+  const { data: product, loading, error } = useProduct(id)
 
-  useEffect(() => {
-    if (id) getProductById(id)
-  }, [id, getProductById])
-
-  if (productLoading) {
+  if (loading) {
     return (
-      <div className="flex justify-center mt-10">
-        <div className="loading loading-spinner loading-lg"></div>
+      <div className="mt-10 flex justify-center">
+        <Spinner label="Cargando producto…" />
       </div>
     )
   }
 
-  if (productError) {
+  if (error) {
     return (
-      <p className="text-center mt-10 text-red-500">Error: {productError}</p>
+      <p role="alert" className="mt-10 text-center text-error">
+        {error.status === 404
+          ? 'Producto no encontrado'
+          : `Error: ${error.message}`}
+      </p>
     )
   }
 
-  if (!product || !product._id) {
-    return <p className="text-center mt-10">Producto no encontrado</p>
-  }
-
   return (
-    <div className="mt-6 md:flex gap-8">
+    <div className="mt-6 gap-8 md:flex">
       <div className="md:w-1/2">
         <img
           src={product.imageUrl}
           alt={product.name}
-          className="w-full object-cover rounded-lg"
+          className="w-full rounded-lg object-cover"
         />
       </div>
-      <section className="flex flex-col gap-5 pt-2 md:pt-0 md:w-1/2">
+      <section className="flex flex-col gap-5 pt-2 md:w-1/2 md:pt-0">
         <h1 className="text-5xl font-bold">{product.name}</h1>
-        <p className="text-xl badge badge-warning p-4 font-bold">
-          ${product.price}
+        <p className="badge badge-warning p-4 text-xl font-bold">
+          {formatPrice(product.price)}
         </p>
         <p className="text-lg">{product.description}</p>
         <p className="text-sm opacity-70">Stock: {product.stock}</p>
-        <button className="btn btn-success mt-2 md:mt-auto md:btn-lg">
-          Agregar al carrito
-        </button>
+        <AddToCartButton
+          product={product}
+          className="mt-2 md:btn-lg md:mt-auto"
+        />
       </section>
     </div>
   )
