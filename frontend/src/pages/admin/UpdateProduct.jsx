@@ -1,4 +1,4 @@
-// E-commerce/frontend/src/pages/admin/AdminProducts.jsx
+// E-commerce/frontend/src/pages/admin/AdminProduct.jsx
 
 /**
  * ARCHIVO : src/pages/admin/UpdateProduct.jsx

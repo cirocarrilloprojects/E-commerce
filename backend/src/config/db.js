@@ -24,7 +24,7 @@ import { env } from './env.js'
 export const connectDB = async () => {
     await mongoose.connect(env.MONGO_URI, {
         maxPoolSize: 10, // máximo de conexiones simultáneas hacia Mongo
-        serverSelectionTimeoutMS: 5000, // no quedarse colgado eternamente si Mongo no está disponible
+        serverSelectionTimeoutMS: 15000, // no quedarse colgado eternamente si Mongo no está disponible
     })
     console.log('✅ Conectado a MongoDB')
 }
