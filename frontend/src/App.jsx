@@ -1,24 +1,29 @@
-//E-commerce/frontend/src/App.jsx
+// E-commerce/frontend/src/App.jsx
 /**
  * ARCHIVO : src/App.jsx
  * ROL     : raíz de la aplicación: monta los proveedores de estado global y las rutas.
- * LO USA  : main.jsx.   USA: UserProvider, CartProvider, AppRoutes, Toaster.
+ * LO USA  : main.jsx.   USA: UserProvider, CartProvider, BackendHealthProvider, AppRoutes, Toaster.
  *
- * ORDEN DE LOS PROVEEDORES (importa): CartProvider usa useUser(), así que va DENTRO de UserProvider.
- * El estado de productos ya NO es global (antes ProductContext): cada pantalla usa su propio hook (useProducts/useProduct).
+ * ORDEN DE LOS PROVEEDORES:
+ *   1) BackendHealthProvider (el más externo: nadie más depende de él)
+ *   2) UserProvider          (depende de nada)
+ *   3) CartProvider          (usa useUser)
  */
 import { Toaster } from 'react-hot-toast'
+import { BackendHealthProvider } from './hooks/useBackendHealth.jsx'
 import { UserProvider } from './context/UserContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import AppRoutes from './AppRoutes'
 
 const App = () => (
-  <UserProvider>
-    <CartProvider>
-      <AppRoutes />
-      <Toaster />
-    </CartProvider>
-  </UserProvider>
+  <BackendHealthProvider>
+    <UserProvider>
+      <CartProvider>
+        <AppRoutes />
+        <Toaster />
+      </CartProvider>
+    </UserProvider>
+  </BackendHealthProvider>
 )
 
 export default App

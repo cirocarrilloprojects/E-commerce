@@ -4,33 +4,52 @@
  * CAPA    : acceso a la red (único lugar que configura axios)
  * ROL     : instancia de axios compartida + normalización de errores.
  * LO USA  : TODOS los archivos de src/services/*.
- * LO GENERA: ApiError — un error con { message, status, details } listo para mostrar en la interfaz.
+ * LO GENERA: ApiError — un error con { message, status, details, isNetworkError } listo para la UI.
  *
- * ANTES: cada servicio hacía  axios.defaults.withCredentials = true  (modificaba el axios GLOBAL) y capturaba el
- * error lanzando new Error('texto genérico'), perdiendo el código HTTP y el mensaje real del backend
- * (por ejemplo "Solo hay 3 unidades disponibles"). Ahora el interceptor conserva todo.
- * El backend v2 siempre responde errores como { error: "mensaje", details?: [{field, message}] }.
+ * NUEVO (notificaciones de caídas):
+ *  - Detecta errores de RED (backend apagado, timeout, ECONNRESET) y los marca con isNetworkError=true.
+ *  - Muestra UN toast de error por ventana de tiempo (NETWORK_TOAST_COOLDOWN_MS) para no spamear cuando
+ *    la app dispara 5 peticiones al mismo tiempo contra un backend caído.
+ *  - Los errores 502/503/504 también se consideran "backend caído" porque suelen venir de un proxy que
+ *    no puede alcanzar al proceso (típico cuando el backend se reinicia).
  */
 import axios from 'axios'
+import toast from 'react-hot-toast'
 
 export const http = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL ?? '/api',
-  withCredentials: true, // envía la cookie httpOnly de sesión
+  withCredentials: true,
   timeout: 15000,
 })
 
-/** ApiError — error de la API con el estado HTTP y los detalles de validación. */
+/** ApiError — error de la API con el estado HTTP, los detalles de validación y si fue un fallo de red. */
 export class ApiError extends Error {
-  constructor(message, { status, details } = {}) {
+  constructor(message, { status, details, isNetworkError = false } = {}) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.details = details
+    this.isNetworkError = isNetworkError
   }
 }
 
 /** isCanceled — true si la petición fue abortada con AbortController (no es un error real; se ignora). */
 export const isCanceled = (error) => axios.isCancel(error)
+
+/**
+ * Control de spam de toasts de red.
+ * Si la app dispara 10 peticiones y el backend está caído, queremos ver UN solo aviso, no diez.
+ */
+let lastNetworkToastAt = 0
+const NETWORK_TOAST_COOLDOWN_MS = 5000
+
+/** networkToastOnce — muestra el toast de "backend caído" solo si pasó el cooldown. */
+const networkToastOnce = (message) => {
+  const now = Date.now()
+  if (now - lastNetworkToastAt < NETWORK_TOAST_COOLDOWN_MS) return
+  lastNetworkToastAt = now
+  toast.error(message, { id: 'network-error', duration: 5000 })
+}
 
 http.interceptors.response.use(
   (response) => response,
@@ -39,14 +58,30 @@ http.interceptors.response.use(
 
     const status = error.response?.status
     const data = error.response?.data
-    // Si el backend envió detalles de validación (Zod), se muestran juntos: "El nombre debe tener… · El precio…"
+
+    // Sin response = nunca llegó al servidor (backend apagado, DNS, timeout, ECONNRESET…).
+    // 502/503/504 = hay algo escuchando (proxy) pero no puede alcanzar al backend.
+    const isNetworkError = !error.response || [502, 503, 504].includes(status)
+
+    if (isNetworkError) {
+      networkToastOnce(
+        'No se pudo conectar con el servidor. Verifica que el backend esté encendido.',
+      )
+      return Promise.reject(
+        new ApiError('No se pudo conectar con el servidor', {
+          status,
+          isNetworkError: true,
+        }),
+      )
+    }
+
     const detailsText = Array.isArray(data?.details)
       ? data.details.map((d) => d.message).join(' · ')
       : ''
     const message =
       detailsText ||
       data?.error ||
-      (status ? `Error ${status}` : 'No se pudo conectar con el servidor')
+      (status ? `Error ${status}` : 'Error inesperado')
 
     return Promise.reject(
       new ApiError(message, { status, details: data?.details }),

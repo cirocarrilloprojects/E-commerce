@@ -1,12 +1,16 @@
 // E-commerce/frontend/src/components/Navbar/UserDropDown.jsx
 /**
- * ARCHIVO : src/components/navbar/UserDropDown.jsx
+ * ARCHIVO : src/components/Navbar/UserDropDown.jsx
  * ROL     : menú del usuario con sesión: acceso a "Mis órdenes" y cierre de sesión.
  * LO USA  : Navbar.jsx.   USA: UserContext (user, logout).
- * CAMBIOS : la lógica de logout vive en UserContext (antes llamaba al servicio y a setUserInfo desde aquí);
- *           los ítems son <button>/<Link> reales (antes <a> sin href, inaccesibles con teclado);
- *           el avatar usa la inicial del usuario (antes una imagen externa de daisyui.com);
- *           se eliminaron los enlaces "Perfil/Configuración" que no llevaban a ningún sitio.
+ *
+ * CORRECCIÓN VISUAL: el avatar ahora es un círculo perfecto.
+ *   - Se quitaron las clases "avatar avatar-placeholder" del <button>: en DaisyUI 5 esperan
+ *     una estructura <div class="avatar"><div>...</div></div> y no aportan nada cuando ya
+ *     controlamos tamaño y forma con Tailwind.
+ *   - El <span> interior ahora tiene ALTO Y ANCHO (h-10 w-10): antes solo tenía w-10,
+ *     por lo que se estiraba verticalmente según el contenido y quedaba rectangular.
+ *   - Se añadió "flex items-center justify-center" para centrar la inicial exactamente.
  */
 import { Link, useNavigate } from 'react-router'
 import toast from 'react-hot-toast'
@@ -33,10 +37,10 @@ const UserDropDown = () => {
     <div className="dropdown dropdown-end">
       <button
         type="button"
-        className="btn btn-circle btn-ghost avatar avatar-placeholder"
+        className="btn btn-circle btn-ghost"
         aria-label={`Menú de ${user.username}`}
       >
-        <span className="w-10 rounded-full bg-neutral text-neutral-content uppercase">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral text-base font-semibold text-neutral-content uppercase">
           {user.username[0]}
         </span>
       </button>

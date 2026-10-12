@@ -54,7 +54,10 @@ app.get('/health', (req, res) => {
     const db = isDbConnected() ? 'connected' : 'disconnected'
     res.status(db === 'connected' ? 200 : 503).json({ status: 'ok', db })
 })
-
+app.get('/api/health', (req, res) => {
+    const db = isDbConnected() ? 'connected' : 'disconnected'
+    res.status(db === 'connected' ? 200 : 503).json({ status: 'ok', db })
+})
 app.use('/api', apiRouter)
 
 app.use(notFoundHandler) // ninguna ruta coincidió → 404
